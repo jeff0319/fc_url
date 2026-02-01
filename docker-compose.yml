@@ -7,6 +7,7 @@ services:
       - "3050:3050"
     environment:
       - NODE_ENV=production
+      - SESSION_KEY=sk-your-session-key
     restart: unless-stopped
     volumes:
       # 如果需要挂载配置文件或日志目录，可以在这里添加

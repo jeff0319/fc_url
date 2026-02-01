@@ -1,4 +1,3 @@
 .DS_Store
 logs/
-session_key.json
 token-extractor.tar.gz

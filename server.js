@@ -1,7 +1,6 @@
 const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = 3050;
@@ -15,25 +14,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const SESSION_KEY_FILE = process.env.SESSION_KEY_FILE || path.join(__dirname, 'session_key.json');
+const SESSION_KEY_ENV = process.env.SESSION_KEY;
 
 function loadSessionKey() {
-  try {
-    const raw = fs.readFileSync(SESSION_KEY_FILE, 'utf8').trim();
-    if (!raw) {
-      throw new Error('session_key 文件为空');
-    }
-    if (raw.startsWith('{')) {
-      const parsed = JSON.parse(raw);
-      if (!parsed.session_key || typeof parsed.session_key !== 'string') {
-        throw new Error('session_key 文件中未找到 session_key 字段');
-      }
-      return parsed.session_key.trim();
-    }
-    return raw;
-  } catch (err) {
-    throw new Error(`读取 session_key 失败: ${err.message}`);
+  if (!SESSION_KEY_ENV || !SESSION_KEY_ENV.trim()) {
+    throw new Error('未设置 SESSION_KEY 环境变量');
   }
+  return SESSION_KEY_ENV.trim();
 }
 
 // API路由：执行curl命令并提取token
