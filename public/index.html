@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="language" content="zh-CN">
+    <title>URL拼接器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>" type="image/svg+xml">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>" type="image/svg+xml">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .final-url {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-radius: 8px;
+            border: 2px solid #007bff;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        .url-display {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            border: 1px solid #dee2e6;
+            margin: 8px 0;
+            cursor: text;
+            user-select: all;
+        }
+        .url-display:hover {
+            background-color: #e9ecef;
+        }
+        .copy-btn {
+            background-color: #28a745;
+            font-size: 16px;
+            padding: 10px 20px;
+            margin-left: 0;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .open-btn {
+            background-color: #ff8c00;
+            font-size: 16px;
+            padding: 10px 20px;
+            margin-left: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .copy-btn:hover:not(:disabled) {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .open-btn:hover:not(:disabled) {
+            background-color: #e67e00;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .copy-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .open-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL拼接器</h1>
+        
+        <form id="tokenForm">
+            <div class="form-group">
+                <label for="curlCommand">Curl命令 (可选):</label>
+                <textarea id="curlCommand" placeholder="留空将使用默认命令，或输入自定义curl命令"></textarea>
+                <small style="color: #666; font-size: 12px;">如果不填写，将使用内置的默认curl命令</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="baseUrl">基础URL (可选):</label>
+                <input type="text" id="baseUrl" placeholder="https://" value="https://fuclaude.jeff0319.com">
+                <small style="color: #666; font-size: 12px;">如果不填写，将使用默认值 https://fuclaude.jeff0319.com</small>
+            </div>
+            
+            <button type="submit" id="submitBtn">🚀 获取链接</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在执行命令...</p>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('tokenForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const curlCommand = document.getElementById('curlCommand').value.trim();
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            
+            // 显示加载状态
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            resultDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/get-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        curlCommand: curlCommand,
+                        baseUrl: baseUrl
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const safeFinalUrl = data.finalUrl.replace(/`/g, '\\`');
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3 style="margin-bottom: 15px;">✅ 成功获取链接!</h3>
+                            
+                            <div class="final-url">
+                                <strong>最终URL:</strong>
+                                <div class="url-display" style="margin-top: 8px;" title="点击选择全部文本">${data.finalUrl}</div>
+                                <div style="margin-top: 10px;">
+                                    <button class="copy-btn" id="copyBtn" onclick="copyToClipboard(\`${safeFinalUrl}\`)">📋 复制</button>
+                                    <button class="open-btn" id="openBtn" onclick="openLogin(\`${safeFinalUrl}\`)">🚪 直登陆</button>
+                                    <small style="color: #666; margin-left: 10px;">或直接点击上方URL进行手动复制</small>
+                                </div>
+                            </div>
+                            
+                            <details style="margin-top: 10px;">
+                                <summary style="cursor: pointer; color: #007bff; font-size: 14px;">查看详细信息 ▼</summary>
+                                <div style="margin-top: 8px; font-size: 14px;">
+                                    <p><strong>Login URL:</strong></p>
+                                    <div class="url-display" style="font-size: 12px;">${data.loginUrl}</div>
+                                    <p><strong>原始响应:</strong></p>
+                                    <pre style="background: #f8f9fa; padding: 8px; overflow-x: auto; border-radius: 5px; font-size: 12px; max-height: 200px; overflow-y: auto;">${JSON.stringify(data.originalResponse, null, 2)}</pre>
+                                </div>
+                            </details>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || '未知错误');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ 获取失败</h3>
+                        <p><strong>错误信息:</strong> ${error.message}</p>
+                        <p><strong>建议:</strong> 请检查curl命令是否正确，以及目标服务器是否可访问。</p>
+                    </div>
+                `;
+            } finally {
+                // 隐藏加载状态
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+        
+        function openLogin(url) {
+            if (!url) {
+                return;
+            }
+            window.open(url, '_blank', 'noopener');
+        }
+
+        function copyToClipboard(text) {
+            const btn = document.getElementById('copyBtn') || event.target;
+            
+            // 尝试使用现代的 Clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function() {
+                    // 显示复制成功提示
+                    showCopySuccess(btn);
+                }).catch(function(err) {
+                    console.error('Clipboard API 复制失败:', err);
+                    // 回退到传统方法
+                    fallbackCopyTextToClipboard(text, btn);
+                });
+            } else {
+                // 回退到传统方法
+                fallbackCopyTextToClipboard(text, btn);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text, btn) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // 避免滚动到底部
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            textArea.style.pointerEvents = "none";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                var successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(btn);
+                } else {
+                    showCopyError(btn);
+                }
+            } catch (err) {
+                console.error('传统复制方法也失败:', err);
+                showCopyError(btn);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showCopySuccess(btn) {
+            const originalText = btn.textContent;
+            const originalBg = btn.style.backgroundColor;
+            
+            btn.textContent = '✅ 已复制!';
+            btn.style.backgroundColor = '#28a745';
+            btn.disabled = true;
+            
+            // 添加一个更明显的视觉提示
+            showToast('复制成功！', 'success');
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = originalBg || '#28a745';
+                btn.disabled = false;
+            }, 2000);
+        }
+        
+        function showCopyError(btn) {
+            const originalText = btn.textContent;
+            const originalBg = btn.style.backgroundColor;
+            
+            btn.textContent = '❌ 复制失败';
+            btn.style.backgroundColor = '#dc3545';
+            btn.disabled = true;
+            
+            // 显示错误提示
+            showToast('复制失败，请手动复制', 'error');
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = originalBg || '#28a745';
+                btn.disabled = false;
+            }, 2000);
+        }
+        
+        function showToast(message, type) {
+            // 创建toast提示
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 15px 25px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                font-size: 16px;
+                z-index: 10000;
+                animation: toastShow 0.3s ease-out;
+                background-color: ${type === 'success' ? '#28a745' : '#dc3545'};
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+                min-width: 200px;
+                text-align: center;
+            `;
+            toast.textContent = message;
+            
+            // 添加动画样式
+            if (!document.getElementById('toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    @keyframes toastShow {
+                        from { 
+                            opacity: 0;
+                            transform: translate(-50%, -50%) scale(0.8);
+                        }
+                        to { 
+                            opacity: 1;
+                            transform: translate(-50%, -50%) scale(1);
+                        }
+                    }
+                    @keyframes toastHide {
+                        from { 
+                            opacity: 1;
+                            transform: translate(-50%, -50%) scale(1);
+                        }
+                        to { 
+                            opacity: 0;
+                            transform: translate(-50%, -50%) scale(0.8);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            // 2秒后移除toast
+            setTimeout(() => {
+                toast.style.animation = 'toastHide 0.3s ease-in';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
